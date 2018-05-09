@@ -19,8 +19,9 @@ PARP = 0 # cantidad de paquetes ARP encolados
 PT = [0] * CT # cantidad de paquetes en cada thread
 TF = int(sys.argv[2]) # tiempo final
 TPT = [0] * CT # total paquetes que pasaron por el thread
-
 STPS = [0] * CT
+outputFile = sys.argv[3]
+
 
 print ("Cantidad de Threads " + str(CT))
 print ("Simulacion para " + str(TF) + " Microsegundos")
@@ -30,36 +31,36 @@ def getIndexMinValueOfList(list):
 
 def getIntervaloArribo():
 	rand = random.uniform(0,1)
-	return (1573.3 - 2853.8 * math.log(-1*math.log(rand)))
+	return (157.33 - 285.38 * math.log(-1*math.log(rand)))
 
 def getTiempoEvaluacion():
-	return random.randint(3000,5000)
+	rand = random.uniform(0,1)
+	return 2505.6 - math.log((1/rand) - 1)*722.3
 
 def atenderPaquete(threadMenorCarga):
 	global TPS
 	global ITO
 	global STO
 	global STE
-	global TPT
+	global T
 	TE = getTiempoEvaluacion()
 	TPS[threadMenorCarga] = T + TE
 	STO[threadMenorCarga] += T - ITO[threadMenorCarga]
 	STE[threadMenorCarga] += TE
-	TPT[threadMenorCarga] += 1
+	
 
 while T <= TF:
-	print(T)
 	threadProximaSalida = getIndexMinValueOfList(TPS)
 
 	if TPLL <= TPS[threadProximaSalida]: # llegada
 
+		threadMenorCarga = getIndexMinValueOfList(PT)
+		STPS[threadMenorCarga] += (TPLL - T)*PT[threadMenorCarga]		
+		
 		T = TPLL
 		IA = getIntervaloArribo()
 		TPLL = T + IA
 
-		threadMenorCarga = getIndexMinValueOfList(PT)
-		STPS[threadMenorCarga] += (TPLL - T)*PT[threadMenorCarga]
-		
 		R = random.randint(0,99)
 
 		if(R <= 9): # paquete de prioridad
@@ -69,28 +70,32 @@ while T <= TF:
 			if(PARP == 1 and PT[threadMenorCarga] == 0):
 				PARP -= 1
 				PT[threadMenorCarga] += 1
+				TPT[threadMenorCarga] += 1
 				atenderPaquete(threadMenorCarga)
 
 		else: # paquete baja prioridad
 
 			PT[threadMenorCarga] += 1
+			TPT[threadMenorCarga] += 1
 
 			if(PT[threadMenorCarga] == 1):
 				atenderPaquete(threadMenorCarga)
 
 	else: # salida
-		print(T)
+
+		STPS[threadProximaSalida] += (TPS[threadProximaSalida] - T)*PT[threadProximaSalida]
 		T = TPS[threadProximaSalida]
 		PT[threadProximaSalida] -= 1
-		STPS[threadProximaSalida] += (TPS[threadProximaSalida] - T)*PT[threadProximaSalida]
 
 		if PARP > 0 or (PARP == 0 and PT[threadProximaSalida] > 0):
 
 			if(PARP > 0):
 				PARP -= 1
 				PT[threadProximaSalida] += 1
+				TPT[threadProximaSalida] += 1
 
 			TE = getTiempoEvaluacion()
+			
 			TPS[threadProximaSalida] = T + TE
 			STE[threadProximaSalida] += TE
 
@@ -99,12 +104,16 @@ while T <= TF:
 			ITO[threadProximaSalida] = T
 			TPS[threadProximaSalida] = HighValue
 
+file = open(outputFile, "w")
 
 for thread in range(0, CT):
 	print("Informacion Thread " + str(thread+1))
-	print("TPT " + str(TPT[thread]))
-	print("STE " + str(STE[thread]))
-	print("STPS " + str(STPS[thread]))
+	file.write("Informacion Thread " + str(thread+1)+"\n")
+	
 	print("PPS " + str(STPS[thread] / TPT[thread]))
+	file.write("PPS " + str(STPS[thread] / TPT[thread])+"\n")
 	print("PEC " + str((STPS[thread] - STE[thread]) / TPT[thread]))
+	file.write("PEC " + str((STPS[thread] - STE[thread]) / TPT[thread])+"\n")
 	print("PTO " + str((STO[thread] * 100 / T)))
+	file.write("PTO " + str((STO[thread] * 100 / T))+"\n")
+
