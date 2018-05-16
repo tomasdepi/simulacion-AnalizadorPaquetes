@@ -7,7 +7,7 @@ import math
 CT = int(sys.argv[1])
 
 T = 0 # tiempo
-HighValue = 10000000000
+HighValue = 10000000000000000
 SS = [0] * CT # sumatoria tiempo de salida de cada thread
 SLL = [0] * CT # sumatoria tiempo de llegada de cada thread
 STE = [0] * CT # sumatoria tiempo de evaliacion de cada thread
@@ -31,11 +31,21 @@ def getIndexMinValueOfList(list):
 
 def getIntervaloArribo():
 	rand = random.uniform(0,1)
-	return (157.33 - 285.38 * math.log(-1*math.log(rand)))
+	resultado = 157.33 - 285.38 * math.log(-1*math.log(rand))
+
+	if resultado < 0:
+		return getIntervaloArribo()
+	else:
+		return resultado
 
 def getTiempoEvaluacion():
 	rand = random.uniform(0,1)
-	return 2505.6 - math.log((1/rand) - 1)*722.3
+	resultado = 2505.6 - math.log((1/rand) - 1)*722.3
+
+	if resultado < 0:
+		return getTiempoEvaluacion()
+	else:
+		return resultado
 
 def atenderPaquete(threadMenorCarga):
 	global TPS
@@ -55,7 +65,8 @@ while T <= TF:
 	if TPLL <= TPS[threadProximaSalida]: # llegada
 
 		threadMenorCarga = getIndexMinValueOfList(PT)
-		STPS[threadMenorCarga] += (TPLL - T)*PT[threadMenorCarga]		
+		for thread in range(0, CT):
+			STPS[thread] += (TPLL - T)*PT[thread]	
 		
 		T = TPLL
 		IA = getIntervaloArribo()
@@ -83,7 +94,9 @@ while T <= TF:
 
 	else: # salida
 
-		STPS[threadProximaSalida] += (TPS[threadProximaSalida] - T)*PT[threadProximaSalida]
+		for thread in range(0, CT):
+			STPS[thread] += (TPS[threadProximaSalida] - T)*PT[thread]
+
 		T = TPS[threadProximaSalida]
 		PT[threadProximaSalida] -= 1
 
